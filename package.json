@@ -1,6 +1,9 @@
 {
-  "name": "custom-ohash-diff",
-  "version": "1.0.0",
+  "name": "json-diff",
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.10.2.1",
+  "description": "A fast, minimal json patch generation library based off ohash's implementation",
+  "author": { "name": "Nathan Rowe" },
   "scripts": {
     "test": "vitest",
     "lint": "eslint --cache .",
@@ -19,6 +22,6 @@
   },
   "volta": {
     "node": "22.13.1",
-    "pnpm": "9.15.4"
+    "pnpm": "10.2.1"
   }
 }
