@@ -14,9 +14,6 @@
  * 4. The patches generated have additional non-standard 'value' and 'from' properties for auditing.
  */
 
-// TODO: Was there an issue when removing a bunch of records? and adding some?
-//       Can't recreate
-
 import type { diff as _odiff } from 'ohash'
 import { objectHash } from 'ohash'
 
@@ -65,7 +62,7 @@ function _diff(
     ...h2Keys,
   ])
 
-  const diffs = []
+  const diffs: DiffEntry[] = []
 
   // Check object properties.
   // Array elements should be treated as a single value

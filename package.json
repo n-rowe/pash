@@ -1,10 +1,22 @@
 {
   "name": "json-diff",
   "version": "0.1.0",
-  "packageManager": "pnpm@9.10.2.1",
+  "packageManager": "pnpm@10.2.1",
   "description": "A fast, minimal json patch generation library based off ohash's implementation",
-  "author": { "name": "Nathan Rowe" },
+  "author": {
+    "name": "Nathan Rowe"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
+    "prepack": "unbuild",
     "test": "vitest",
     "lint": "eslint --cache .",
     "lint:fix": "eslint --cache --fix ."
@@ -18,6 +30,7 @@
     "eslint": "^9.19.0",
     "fast-json-patch": "^3.1.1",
     "typescript": "^5.7.3",
+    "unbuild": "^3.3.1",
     "vitest": "^3.0.4"
   },
   "volta": {
