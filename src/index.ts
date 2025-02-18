@@ -30,7 +30,7 @@ type DiffResult = Array<DiffEntry> & { asPatches: () => Operation[] }
  * @param {unknown} obj1 - The first object to compare.
  * @param {unknown} obj2 - The second object to compare.
  * @param {HashOptions} [opts] - Configuration options for hashing the objects. See {@link HashOptions}.
- * @returns {DiffEntry[]} An array with the differences between the two objects.
+ * @returns {DiffResult} An array with the differences between the two objects.
  */
 export function jsonDiff(
   obj1: unknown,
