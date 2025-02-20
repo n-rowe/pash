@@ -24,6 +24,7 @@
     "dist"
   ],
   "scripts": {
+    "bench": "NODE_OPTIONS=--max-old-space-size=8192 vitest bench",
     "prepack": "unbuild",
     "prepare": "husky",
     "lint": "eslint --cache .",
