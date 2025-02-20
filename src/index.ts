@@ -1,28 +1,25 @@
-/**
- * This is a modified version of
- * https://github.com/unjs/ohash/blob/main/src/utils/diff.ts
- *
- * In order to improve array diffing, by reducing the amount of
- * patches created.
- *
- * Changes:
- * 1. It stores the type of hashed objects.
- * 2. If an object is an array, it stores hashes of its direct children.
- * 3. If an object is an array element, do not diff properties.
- *   3.1 An array element only diffs its own hash.
- *   3.2 This means if it is an object, it will not replace individual properties.
- * 4. The patches generated have additional non-standard 'value' and 'from' properties for auditing.
- */
+// Based on https://github.com/unjs/ohash/blob/main/src/utils/diff.ts v2.0.0 (MIT)
+import { serialize } from 'ohash'
 
-import type { diff as _odiff } from 'ohash'
-import { objectHash } from 'ohash'
-
-type _HashOptions = NonNullable<Parameters<typeof _odiff>['2']>
-export interface HashOptions extends _HashOptions {
-
+export interface DiffOptions {
+  /**
+   * Function to determine if a key should be excluded from hashing.
+   * @optional
+   * @param key - The key to check for exclusion.
+   * @returns {boolean} - Returns true to exclude the key from hashing.
+   */
+  excludeKeys?: ((key: string) => boolean) | undefined
 }
 
-type DiffResult = Array<DiffEntry> & { asPatches: () => Operation[] }
+interface DiffResult extends Array<DiffEntry> {
+  asPatches: () => Operation[]
+}
+
+enum DiffType {
+  primitive,
+  array,
+  object,
+}
 
 /**
  * Calculates the difference between two objects and returns a list of differences.
@@ -35,7 +32,7 @@ type DiffResult = Array<DiffEntry> & { asPatches: () => Operation[] }
 export function jsonDiff(
   obj1: unknown,
   obj2: unknown,
-  opts: HashOptions = {},
+  opts: DiffOptions = {},
 ): DiffResult {
   const h1 = _toHashedObject(obj1, opts)
   const h2 = _toHashedObject(obj2, opts)
@@ -50,10 +47,10 @@ export function jsonDiff(
 function _diff(
   h1: DiffHashedObject,
   h2: DiffHashedObject,
-  opts: HashOptions = {},
+  opts: DiffOptions = {},
 ): DiffEntry[] {
-  const isArray = h1.type === 'array' && h2.type === 'array'
-  const isArrayElement = h1.parent?.type === 'array' && h2.parent?.type === 'array'
+  const isArray = h1.type === DiffType.array && h2.type === DiffType.array
+  const isArrayElement = h1.parent?.type === DiffType.array && h2.parent?.type === DiffType.array
 
   const h1Keys = Object.keys(h1.props || {})
   const h2Keys = Object.keys(h2.props || {})
@@ -77,7 +74,7 @@ function _diff(
 
       const p1 = h1.props[isArray ? Number(prop) + p1Offset : prop]
       const p2 = h2.props[isArray ? Number(prop) + p2Offset : prop]
-      const actualp2 = isArray && p2?.hash != null && h2.hasHash(p2?.hash).success
+      const actualp2 = isArray && p2?.hash != null && h2.hasHash(p2?.hash)
         ? h2.props[prop] ?? p2
         : p2
 
@@ -102,8 +99,8 @@ function _diff(
       }
       else if (
         (p1 || p2)
-        && (p1?.hash == null || !h2.hasHash(p1?.hash).success)
-        && (p2?.hash == null || !h1.hasHash(p2.hash).success)
+        && (p1?.hash == null || !h2.hasHash(p1?.hash))
+        && (p2?.hash == null || !h1.hasHash(p2.hash))
       ) {
         diffs.push(
           new DiffEntry((p2 || p1)!.key, p1 ? 'remove' : 'add', p2, p1),
@@ -114,15 +111,15 @@ function _diff(
 
   // Check value hashes or element hashes.
   if ((allProps.size === 0 || isArrayElement) && h1.hash !== h2.hash) {
-    const previousHash = h2.hash != null ? h1?.hasHash(h2.hash) : undefined
-    const nextHash = h1.hash != null ? h2?.hasHash(h1.hash) : undefined
+    const previousHash = h2.hash != null && h1?.hasHash(h2.hash)
+    const nextHash = h1.hash != null && h2?.hasHash(h1.hash)
 
     // Element once existed, so remove.
-    if (previousHash?.success && !nextHash?.success) {
+    if (previousHash && !nextHash) {
       diffs.push(new DiffEntry((h2 ?? h1).key, 'remove', h2, h1))
     }
     // Element still exists, so add.
-    else if (nextHash?.success) {
+    else if (nextHash) {
       diffs.push(new DiffEntry((h2 ?? h1).key, 'add', h2, h1))
     }
     // Element did not exist, so replace.
@@ -136,11 +133,11 @@ function _diff(
 
 function _toHashedObject(
   obj: unknown,
-  opts: HashOptions,
+  opts: DiffOptions,
   key = '',
 ): DiffHashedObject {
   if (obj != null && typeof obj !== 'object') {
-    return new DiffHashedObject(key, obj, objectHash(obj, opts), 'primitive')
+    return new DiffHashedObject(key, obj, serialize(obj), DiffType.primitive)
   }
 
   const isArray = Array.isArray(obj)
@@ -162,7 +159,7 @@ function _toHashedObject(
     key,
     obj,
     `{${hashes.sort().join(':')}}`,
-    isArray ? 'array' : 'object',
+    isArray ? DiffType.array : DiffType.object,
     props,
   )
 }
@@ -173,7 +170,6 @@ interface BaseOperation<T extends string> {
   op: T
   path: string
 }
-
 interface AddOperation extends BaseOperation<'add'> {
   /**
    * The value to add.
@@ -262,11 +258,6 @@ class DiffEntry {
   }
 }
 
-interface HashSearchResult {
-  success: boolean
-  object: DiffHashedObject
-}
-
 class DiffHashedObject {
   private hashes: Set<string> = new Set()
 
@@ -274,14 +265,14 @@ class DiffHashedObject {
     public key: string,
     public value: unknown,
     public hash?: string,
-    public type?: 'primitive' | 'array' | 'object',
+    public type?: DiffType,
     public props?: Record<string, DiffHashedObject>,
     public parent?: DiffHashedObject,
   ) {
     if (hash != null)
       this.hashes.add(hash)
 
-    if (props != null && type === 'array') {
+    if (props != null && type === DiffType.array) {
       for (const prop in props) {
         const propHash = props[prop]
         if (!propHash)
@@ -311,12 +302,17 @@ class DiffHashedObject {
     return `${k}(${this.value as string})`
   }
 
-  hasHash(hash: string): HashSearchResult {
+  /**
+   * Determines if the provided hash exists in the object.
+   * @param hash The has to check for.
+   * @returns If the hash is a member
+   */
+  hasHash(hash: string): boolean {
     if (this.hashes.has(hash))
-      return { success: true, object: this }
+      return true
 
     if (!this.parent)
-      return { success: false, object: this }
+      return false
 
     return this.parent.hasHash(hash)
   }

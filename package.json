@@ -1,6 +1,6 @@
 {
   "name": "@n-rowe/pash",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "packageManager": "pnpm@10.2.1",
   "description": "A fast, minimal json patch generation library based off ohash's implementation",
   "author": {
