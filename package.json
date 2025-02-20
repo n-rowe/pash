@@ -1,5 +1,5 @@
 {
-  "name": "json-diff",
+  "name": "@n-rowe/pash",
   "version": "0.1.0",
   "packageManager": "pnpm@10.2.1",
   "description": "A fast, minimal json patch generation library based off ohash's implementation",
@@ -20,6 +20,7 @@
   "scripts": {
     "prepack": "unbuild",
     "test": "vitest",
+    "test:ci": "vitest run",
     "lint": "eslint --cache .",
     "lint:fix": "eslint --cache --fix ."
   },

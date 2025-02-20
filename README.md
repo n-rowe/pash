@@ -1,6 +1,5 @@
-# Json Diff
+# Pash
 A fast, minimal json patch generation library based off [ohash](https://github.com/unjs/ohash)'s implementation.
-
 
 ## Motivations
 The current implementation of libraries such as `fast-json-patch` or `ohash` will create additional diff entries for array elements. Which can, in some cases, defeat the simplicity of JSON Patch.
