@@ -26,6 +26,11 @@ jobs:
           node-version: 'lts/*'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm test:ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Run tests
+        run: pnpm test:ci
