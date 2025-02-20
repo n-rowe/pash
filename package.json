@@ -6,6 +6,7 @@
   "author": {
     "name": "Nathan Rowe"
   },
+  "license": "MIT",
   "repository": {
     "url": "https://github.com/n-rowe/pash"
   },
@@ -29,7 +30,7 @@
     "lint:fix": "eslint --cache --fix ."
   },
   "dependencies": {
-    "ohash": "^1.1.4"
+    "ohash": "^2.0.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.3.0",
