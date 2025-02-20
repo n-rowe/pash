@@ -23,7 +23,7 @@ jobs:
         uses: volta-cli/action@v4
 
       - name: 🛠️ Cache dependencies
-        uses: actions/cache
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
