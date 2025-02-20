@@ -8,29 +8,32 @@ on:
     branches:
       - main
 
+env:
+  VOLTA_FEATURE_PNPM: 1
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: 🚧 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
+      - name: 🛠️ Set up node and pnpm
+        uses: volta-cli/action@v4
 
-      - name: Setup node
-        uses: actions/setup-node@v4
+      - name: 🛠️ Cache dependencies
+        uses: actions/cache
         with:
-          node-version: 'lts/*'
-          cache: pnpm
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
+      - name: 📝 Lint
         run: pnpm lint
 
-      - name: Run tests
+      - name: 🧪 Run tests
         run: pnpm test:ci
