@@ -29,7 +29,7 @@ enum DiffType {
  * @param {HashOptions} [opts] - Configuration options for hashing the objects. See {@link HashOptions}.
  * @returns {DiffResult} An array with the differences between the two objects.
  */
-export function jsonDiff(
+export function diff(
   obj1: unknown,
   obj2: unknown,
   opts: DiffOptions = {},

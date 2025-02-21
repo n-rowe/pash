@@ -1,7 +1,7 @@
 import type { Operation } from 'fast-json-patch'
 import { applyPatch, deepClone } from 'fast-json-patch'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { jsonDiff } from '../src'
+import { diff } from '../src'
 
 const complexArr = { id: 1, items: [1, 2, 3] }
 const complexObj = { id: 1, nested: { a: 1, b: 2, c: 3 } }
@@ -22,7 +22,7 @@ describe.for([
   { input: complexObj, output: { id: 1, nested: { a: 1, b: 2, c: 4 } }, op: 'replace', change_key: 'nested' },
   { input: complexObj, output: { id: 1, nested: { a: 1, b: 4, c: 3 } }, op: 'replace', change_key: 'nested' },
 ])('$op - diff($input, $output)', ({ input, output, op, change_key }) => {
-  const patches = jsonDiff(input, output)
+  const patches = diff(input, output)
   const operations = patches.asPatches()
   const patchError = `Invalid patch got: ${JSON.stringify(operations)}`
 
