@@ -9,6 +9,7 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "types": ["vitest"],
+    "allowImportingTsExtensions": true,
     "allowJs": true,
     "strict": true,
     "noImplicitOverride": true,
