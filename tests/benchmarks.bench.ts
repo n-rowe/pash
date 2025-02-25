@@ -15,7 +15,7 @@ function generateShuffled(size: number) {
   )
 }
 
-for (const size of [10, 100, 1000, 10_000, 100_000]) {
+for (const size of [10, 100, 1000, 5000]) {
   const humanisedSize = size.toLocaleString('en-US')
   const original = generateShuffled(size)
 
