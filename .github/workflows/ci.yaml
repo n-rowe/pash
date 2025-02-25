@@ -47,3 +47,9 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           fail_ci_if_error: true
+
+      - name: 🚀 Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: pnpm vitest bench
+          token: ${{ secrets.CODSPEED_TOKEN }}
