@@ -47,7 +47,7 @@ console.log(patches)
 ### 2. Remove 1 element from large array
 ```js
 import { diff } from '@n-rowe/pash'
-import data from './large_diff.json' with { type: 'json' }
+import data from './large_diff.json'
 
 const patches = diff(data.original, data.new).asPatches()
 console.log(patches)
@@ -56,7 +56,7 @@ console.log(patches)
 Compared to `fast-json-patch`:
 ```js
 import { compare } from 'fast-json-patch'
-import data from './large_diff.json' with { type: 'json' }
+import data from './large_diff.json'
 
 const patches = compare(data.original, data.new)
 console.log(patches)
