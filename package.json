@@ -25,6 +25,7 @@
   ],
   "scripts": {
     "bench": "NODE_OPTIONS=--max-old-space-size=8192 vitest bench",
+    "bench:ci": "NODE_OPTIONS=--max-old-space-size=8192 vitest bench --run",
     "prepack": "unbuild",
     "prepare": "husky",
     "lint": "eslint --cache .",
