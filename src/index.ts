@@ -132,7 +132,7 @@ function _toHashedObject(
   obj: unknown,
   opts: DiffOptions = {},
   key: string = '',
-  parent?: DiffHashedObject
+  parent?: DiffHashedObject,
 ): DiffHashedObject {
   if (obj != null && typeof obj !== 'object') {
     return new DiffHashedObject(
@@ -140,13 +140,13 @@ function _toHashedObject(
       obj,
       serialize(obj),
       undefined,
-      parent
+      parent,
     )
   }
 
   // Create container element
   const props: Record<string, DiffHashedObject> = {}
-  const container = new DiffHashedObject(key, obj, "", props)
+  const container = new DiffHashedObject(key, obj, '', props)
 
   // Hash child props
   for (const _key in obj) {
@@ -250,7 +250,7 @@ class DiffEntry {
       }
       case 'replace': {
         return `Changed \`${this.path}\` from \`${this.oldValue?.toString() ?? '-'
-          }\` to \`${this.newValue?.toString()}\``
+        }\` to \`${this.newValue?.toString()}\``
       }
     }
   }
@@ -266,7 +266,7 @@ class DiffHashedObject {
     public hash: string,
     public props?: Record<string, DiffHashedObject>,
     public parent?: DiffHashedObject,
-    public keys: string[] = []
+    public keys: string[] = [],
   ) {
     if (typeof value !== 'object') {
       this.type = DiffType.primitive
@@ -341,5 +341,4 @@ class DiffHashedObject {
     }
     return `${k}(${this.value as string})`
   }
-
 }
