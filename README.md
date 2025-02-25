@@ -23,12 +23,12 @@ To resolve this a number of changes were made on top of ohash's diff implementat
 ### 1. Basic usage
 Below is the basic usage of pash.
 ```js
-import { jsonDiff } from '@n-rowe/pash'
+import { diff } from '@n-rowe/pash'
 
 const source = { name: 'Graham', roles: ['Admin', 'User', 'Owner'] }
 const changed = { name: 'Graham', roles: ['Admin', 'Owner'] }
 
-const patches = jsonDiff(source, changed).asPatches()
+const patches = diff(source, changed).asPatches()
 console.log(patches)
 // [ { op: 'remove', path: '/roles/1', value: 'User' } ]
 ```
@@ -42,4 +42,23 @@ const changed = { name: 'Graham', roles: ['Admin', 'Owner'] }
 const patches = compare(source, changed)
 console.log(patches)
 // [ { op: 'remove', path: '/roles/2' }, { op: 'replace', path: '/roles/1', value: 'Owner' } ]
+```
+
+### 2. Remove 1 element from large array
+```js
+import { diff } from '@n-rowe/pash'
+import data from './large_diff.json' with { type: 'json' }
+
+const patches = diff(data.original, data.new).asPatches()
+console.log(patches)
+// [ { op: 'remove', path: '/1984', value: { id: '79db2453-96c3-4bd3-8a23-1a22f77754b6', name: 'Gertrude' } } ]
+```
+Compared to `fast-json-patch`:
+```js
+import { compare } from 'fast-json-patch'
+import data from './large_diff.json' with { type: 'json' }
+
+const patches = compare(data.original, data.new)
+console.log(patches)
+// [ { op: 'remove', path: '/4999' }, { op: 'replace', path: '/4998/name', value: 'Kyler' } ...6029 more items ],
 ```
