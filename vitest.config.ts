@@ -1,8 +1,9 @@
 import codspeedPlugin from '@codspeed/vitest-plugin'
+import { isCI } from 'std-env'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [codspeedPlugin()],
+  plugins: [isCI && codspeedPlugin()],
   test: {
     dir: './tests',
     coverage: {
