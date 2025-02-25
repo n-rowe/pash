@@ -112,11 +112,11 @@ function _diff(
   // Check value hashes or element hashes.
   if ((allProps?.size === 0 || isArrayElement) && !h1.compare(h2)) {
     // Element still exists, so add.
-    if (h2.parent?.contains(h1)) {
+    if (isArrayElement && h2.parent?.contains(h1)) {
       diffs.push(new DiffEntry((h2 ?? h1).key, 'add', h2, h1))
     }
     // Element once existed, so remove.
-    else if (h1.parent?.contains(h2)) {
+    else if (isArrayElement && h1.parent?.contains(h2)) {
       diffs.push(new DiffEntry((h2 ?? h1).key, 'remove', h2, h1))
     }
     // Element did not exist, so replace.
@@ -146,14 +146,20 @@ function _toHashedObject(
 
   // Create container element
   const props: Record<string, DiffHashedObject> = {}
-  const container = new DiffHashedObject(key, obj, '', props)
+  const container = new DiffHashedObject(key, obj, '', props, parent)
 
   // Hash child props
   for (const _key in obj) {
     if (opts.excludeKeys?.(_key))
       continue
 
-    const hashObj = _toHashedObject(obj[_key as keyof typeof obj], opts, `${key}/${_key}`, container)
+    const hashObj = _toHashedObject(
+      obj[_key as keyof typeof obj],
+      opts,
+      `${key}/${_key}`,
+      container,
+    )
+
     props[_key] = hashObj
     container.keys?.push(_key)
     container.hash += hashObj.hash
