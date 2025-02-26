@@ -1,7 +1,7 @@
 import type { Operation } from 'fast-json-patch'
 import { applyPatch, deepClone } from 'fast-json-patch'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { diff } from '../src'
+import { diff } from '../src/index.ts'
 
 const inputArr = [1, 2, 3, 4, 5]
 

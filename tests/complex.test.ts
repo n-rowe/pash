@@ -1,7 +1,7 @@
 import type { Operation } from 'fast-json-patch'
 import { applyPatch, deepClone } from 'fast-json-patch'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { diff } from '../src'
+import { diff } from '../src/index.ts'
 
 const complexArr = { id: 1, items: [1, 2, 3] }
 const complexObj = { id: 1, nested: { a: 1, b: 2, c: 3 } }

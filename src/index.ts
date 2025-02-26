@@ -48,6 +48,8 @@ function _diff(
   h1: DiffHashedObject,
   h2: DiffHashedObject,
   opts: DiffOptions = {},
+  h1Idx?: number,
+  h2Idx?: number,
 ): DiffEntry[] {
   const isArray = h1.type === DiffType.array && h2.type === DiffType.array
   const isArrayElement = h1.parent?.type === DiffType.array && h2.parent?.type === DiffType.array
@@ -72,14 +74,17 @@ function _diff(
       if (prop == null)
         continue
 
-      const p1 = h1.props[isArray ? Number(prop) + p1Offset : prop]
-      const p2 = h2.props[isArray ? Number(prop) + p2Offset : prop]
-      const actualp2 = isArray && h2.contains(p2)
+      const p1Idx = isArray ? Number(prop) + p1Offset : prop
+      const p1 = h1.props[p1Idx]
+
+      const p2Idx = isArray ? Number(prop) + p2Offset : prop
+      const p2 = h2.props[p2Idx]
+      const actualp2 = isArray && h2.contains(p2, p2Idx as number)
         ? h2.props[prop] ?? p2
         : p2
 
       if (p1 && p2) {
-        const propDiffs = _diff(p1, p2, opts)
+        const propDiffs = _diff(p1, p2, opts, p1Idx as number, p2Idx as number)
         if (isArray) {
           const elemOperation = propDiffs[0]?.op
           if (elemOperation === 'add') {
@@ -97,14 +102,8 @@ function _diff(
 
         diffs.push(...propDiffs)
       }
-      else if (
-        (p1 || p2)
-        && (!h2.contains(p1))
-        && (!h1.contains(p2))
-      ) {
-        diffs.push(
-          new DiffEntry((p2 || p1)!.key, p1 ? 'remove' : 'add', p2, p1),
-        )
+      else if ((p1 || p2) && (!h2.contains(p1, p2Idx as number) && !h1.contains(p2, p1Idx as number))) {
+        diffs.push(new DiffEntry((p2 || p1)!.key, p1 ? 'remove' : 'add', p2, p1))
       }
     }
   }
@@ -112,11 +111,11 @@ function _diff(
   // Check value hashes or element hashes.
   if ((allProps?.size === 0 || isArrayElement) && !h1.compare(h2)) {
     // Element still exists, so add.
-    if (isArrayElement && h2.parent?.contains(h1)) {
+    if (h2.parent?.contains(h1, h2Idx)) {
       diffs.push(new DiffEntry((h2 ?? h1).key, 'add', h2, h1))
     }
     // Element once existed, so remove.
-    else if (isArrayElement && h1.parent?.contains(h2)) {
+    else if (h1.parent?.contains(h2, h1Idx)) {
       diffs.push(new DiffEntry((h2 ?? h1).key, 'remove', h2, h1))
     }
     // Element did not exist, so replace.
@@ -169,6 +168,84 @@ function _toHashedObject(
 }
 
 // --- Internal classes ---
+
+class DiffHashedObject {
+  #hashes: Set<string> | undefined
+
+  constructor(
+    public key: string,
+    public value: unknown,
+    public hash: string,
+    public props?: Record<string, DiffHashedObject>,
+    public parent?: DiffHashedObject,
+    public keys: string[] = [],
+    public type: DiffType = DiffType.object,
+  ) {
+    this.type = typeof value !== 'object'
+      ? DiffType.primitive
+      : Array.isArray(value)
+        ? DiffType.array
+        : DiffType.object
+  }
+
+  /**
+   * Compares against a {@link DiffHashedObject}.
+   * @returns If the objects are equal.
+   */
+  compare(o2?: DiffHashedObject): boolean {
+    return o2 != null
+      && this.type === o2.type
+      && this.hash === o2.hash
+  }
+
+  /**
+   * Determines if the provided hash exists in the object.
+   * @param hash The hash to check for.
+   * @returns If the hash is a member
+   */
+  contains(hash?: DiffHashedObject, current: number = 0): boolean {
+    // Quick checks
+    if (this.type !== DiffType.array)
+      return false
+    if (!hash || !hash.hash)
+      return false
+    if (!this.props)
+      return false
+    if (this.#hashes?.has(hash.hash))
+      return true
+
+    // Compute hashes
+    this.#hashes ??= new Set()
+    for (let i = current; i < this.keys.length; i++) {
+      const prop = this.props[i]
+      if (prop?.hash == null)
+        continue
+
+      this.#hashes.add(prop.hash)
+      if (hash.compare(prop))
+        return true
+    }
+
+    return false
+  }
+
+  toString() {
+    if (this.props) {
+      return `{${this.keys.join(',')}}`
+    }
+    else {
+      return JSON.stringify(this.value)
+    }
+  }
+
+  toJSON() {
+    const k = this.key || '/'
+    if (this.props) {
+      return `${k}({${this.keys.join(',')}})`
+    }
+    return `${k}(${this.value as string})`
+  }
+}
 
 interface BaseOperation<T extends string> {
   op: T
@@ -259,92 +336,5 @@ class DiffEntry {
         }\` to \`${this.newValue?.toString()}\``
       }
     }
-  }
-}
-
-class DiffHashedObject {
-  #hashes: Set<string> | undefined
-  public type: DiffType
-
-  constructor(
-    public key: string,
-    public value: unknown,
-    public hash: string,
-    public props?: Record<string, DiffHashedObject>,
-    public parent?: DiffHashedObject,
-    public keys: string[] = [],
-  ) {
-    if (typeof value !== 'object') {
-      this.type = DiffType.primitive
-      return
-    }
-
-    if (Array.isArray(value))
-      this.type = DiffType.array
-    else
-      this.type = DiffType.object
-  }
-
-  /**
-   * Compares against a {@link DiffHashedObject}.
-   */
-  compare(o2?: DiffHashedObject): boolean {
-    if (!o2)
-      return false
-    if (this.type !== o2.type)
-      return false
-    if (this.hash !== o2.hash)
-      return false
-
-    return true
-  }
-
-  /**
-   * Determines if the provided hash exists in the object.
-   * @param hash The hash to check for.
-   * @returns If the hash is a member
-   */
-  contains(hash?: DiffHashedObject): boolean {
-    // Quick checks
-    if (!hash || !hash.hash)
-      return false
-    if (this.type !== DiffType.array)
-      return false
-    if (!this.props)
-      return false
-    if (this.#hashes && this.#hashes.size !== 0)
-      return this.#hashes.has(hash.hash)
-
-    // TODO: Adding elements to a set is the slowest thing.
-    // Compute hashes
-    let didFind = false
-    this.#hashes = new Set()
-    for (const key in this.props) {
-      const prop = this.props[key]
-      if (prop?.hash == null)
-        continue
-
-      didFind ||= prop.hash === hash.hash
-      this.#hashes.add(prop.hash)
-    }
-
-    return didFind
-  }
-
-  toString() {
-    if (this.props) {
-      return `{${Object.keys(this.props).join(',')}}`
-    }
-    else {
-      return JSON.stringify(this.value)
-    }
-  }
-
-  toJSON() {
-    const k = this.key || '/'
-    if (this.props) {
-      return `${k}({${Object.keys(this.props).join(',')}})`
-    }
-    return `${k}(${this.value as string})`
   }
 }
