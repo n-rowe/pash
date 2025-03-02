@@ -1,0 +1,57 @@
+name: cd
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ['src/**/*', package.json]
+    branches:
+      - main
+
+env:
+  NPM_CONFIG_PROVENANCE: true
+
+jobs:
+  cd:
+    if: |
+      success() &&
+      github.ref == 'refs/heads/main'
+    needs:
+      - ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: 🚧 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Set up node and pnpm
+        uses: volta-cli/action@v4
+        with:
+          registry-url: 'https://registry.npmjs.org/'
+          always-auth: true
+
+      - name: 🛠️ Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 📝 Bump version
+        uses: TriPSs/conventional-changelog-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          git-message: 'chore: bump to version {version}'
+          preset: angular
+          tag-prefix: ''
+          output-file: CHANGELOG.md
+
+      - name: 🚀 Publish
+        run: pnpm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
