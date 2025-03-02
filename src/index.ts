@@ -1,6 +1,4 @@
 // Based on https://github.com/unjs/ohash/blob/main/src/utils/diff.ts v2.0.0 (MIT)
-import { serialize } from 'ohash'
-
 export interface DiffOptions {
   /**
    * Function to determine if a key should be excluded from hashing.
@@ -137,7 +135,8 @@ function _toHashedObject(
     return new DiffHashedObject(
       key,
       obj,
-      serialize(obj),
+      // eslint-disable-next-line ts/restrict-template-expressions
+      `${typeof obj}${obj}`,
       undefined,
       parent,
     )
