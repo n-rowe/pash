@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: 🚧 Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 🛠️ Set up node and pnpm
         uses: volta-cli/action@v4
@@ -46,10 +48,13 @@ jobs:
 
       - name: 📝 Bump version
         uses: TriPSs/conventional-changelog-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.github_token }}
           git-message: 'chore: release {version} [skip ci]'
           preset: angular
+          skip-git-pull: "true"
           tag-prefix: ''
           output-file: CHANGELOG.md
 
