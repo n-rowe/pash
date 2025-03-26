@@ -46,8 +46,8 @@ function _diff(
   h1: DiffHashedObject,
   h2: DiffHashedObject,
   opts: DiffOptions = {},
-  h1Idx?: number,
-  h2Idx?: number,
+  h1Idx?: string | number,
+  h2Idx?: string | number,
 ): DiffEntry[] {
   const isArray = h1.type === DiffType.array && h2.type === DiffType.array
   const isArrayElement = h1.parent?.type === DiffType.array && h2.parent?.type === DiffType.array
@@ -77,12 +77,12 @@ function _diff(
 
       const p2Idx = isArray ? Number(prop) + p2Offset : prop
       const p2 = h2.props[p2Idx]
-      const actualp2 = isArray && h2.contains(p2, p2Idx as number)
+      const actualp2 = isArray && h2.contains(p2, p2Idx)
         ? h2.props[prop] ?? p2
         : p2
 
       if (p1 && p2) {
-        const propDiffs = _diff(p1, p2, opts, p1Idx as number, p2Idx as number)
+        const propDiffs = _diff(p1, p2, opts, p1Idx, p2Idx)
         if (isArray) {
           const elemOperation = propDiffs[0]?.op
           if (elemOperation === 'add') {
@@ -100,8 +100,10 @@ function _diff(
 
         diffs.push(...propDiffs)
       }
-      else if ((p1 || p2) && (!h2.contains(p1, p2Idx as number) && !h1.contains(p2, p1Idx as number))) {
-        diffs.push(new DiffEntry((p2 || p1)!.key, p1 ? 'remove' : 'add', p2, p1))
+      else if ((p1 || p2) && (!h2.contains(p1, p2Idx) && !h1.contains(p2, p1Idx))) {
+        const op = p1 ? 'remove' : 'add'
+        const key = isArray && op === 'remove' ? `${p1!.parent!.key}/${p2Idx}` : (p2 || p1)!.key
+        diffs.push(new DiffEntry(key, op, p2, p1))
       }
     }
   }
@@ -202,7 +204,7 @@ class DiffHashedObject {
    * @param hash The hash to check for.
    * @returns If the hash is a member
    */
-  contains(hash?: DiffHashedObject, current: number = 0): boolean {
+  contains(hash?: DiffHashedObject, current: string | number = 0): boolean {
     // Quick checks
     if (this.type !== DiffType.array)
       return false
@@ -215,7 +217,7 @@ class DiffHashedObject {
 
     // Compute hashes
     this.#hashes ??= new Set()
-    for (let i = current; i < this.keys.length; i++) {
+    for (let i = Number(current) || 0; i < this.keys.length; i++) {
       const prop = this.props[i]
       if (prop?.hash == null)
         continue
