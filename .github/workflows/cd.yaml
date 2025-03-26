@@ -11,13 +11,14 @@ env:
   NPM_CONFIG_PROVENANCE: true
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yaml
+
   cd:
     if: |
-      success() &&
-      github.ref == 'refs/heads/main'
-    needs:
-      - ci
+      success() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    needs: ci
     permissions:
       contents: read
       id-token: write

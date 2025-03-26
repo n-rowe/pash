@@ -2,10 +2,7 @@ name: ci
 
 on:
   workflow_dispatch:
-  push:
-    paths: ['src/**/*', 'tests/**/*', package.json]
-    branches:
-      - main
+  workflow_call:
   pull_request:
     paths: ['src/**/*', 'tests/**/*', package.json]
     branches:
