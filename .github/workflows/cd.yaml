@@ -8,6 +8,7 @@ on:
       - main
 
 env:
+  VOLTA_FEATURE_PNPM: 1
   NPM_CONFIG_PROVENANCE: true
 
 jobs:
