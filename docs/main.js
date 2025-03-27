@@ -1,5 +1,6 @@
 import { diff } from 'https://cdn.jsdelivr.net/npm/@n-rowe/pash/dist/index.min.mjs'
 
+/* Patch Generation */
 function getJsonValue(id) {
   const el = document.getElementById(id)
   if (!el)
@@ -54,5 +55,22 @@ function generatePatch() {
   patchTimeEl.textContent = `Generated patch in ${totalTime}ms`
 }
 
-const btn = document.getElementById('generateBtn')
-btn.addEventListener('click', generatePatch)
+document.getElementById('generateBtn').addEventListener('click', generatePatch)
+
+/* TextArea Files */
+function setFileContent(event) {
+  const inputFile = event.dataTransfer.files[0]
+  const reader = new FileReader()
+  reader.onload = () => {
+    event.target.textContent = reader.result
+  }
+  reader.readAsText(inputFile)
+}
+
+const originalInput = document.getElementById('originalInput')
+originalInput.addEventListener('dragover', e => e.preventDefault())
+originalInput.addEventListener('drop', setFileContent)
+
+const changedInput = document.getElementById('changedInput')
+changedInput.addEventListener('dragover', e => e.preventDefault())
+changedInput.addEventListener('drop', setFileContent)
