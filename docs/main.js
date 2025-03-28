@@ -53,6 +53,7 @@ function generatePatch() {
   outputValEl.value = JSON.stringify(output, undefined, 4)
   outputEl.classList.remove('d-none')
   patchTimeEl.textContent = `Generated patch in ${totalTime}ms`
+  patchTimeEl.classList.remove('d-none')
 }
 
 document.getElementById('generateBtn').addEventListener('click', generatePatch)
@@ -74,3 +75,18 @@ originalInput.addEventListener('drop', setFileContent)
 const changedInput = document.getElementById('changedInput')
 changedInput.addEventListener('dragover', e => e.preventDefault())
 changedInput.addEventListener('drop', setFileContent)
+
+/* Output */
+function writeOutput() {
+  const outputValEl = document.getElementById('output')
+  const data = new Blob([outputValEl.value], { type: 'text/json' })
+
+  const uri = URL.createObjectURL(data)
+  const link = document.createElement('a')
+  link.setAttribute('download', 'output-patch.json')
+  link.href = uri
+  link.click()
+  URL.revokeObjectURL(uri)
+}
+
+document.getElementById('saveOutputBtn').addEventListener('click', writeOutput)
