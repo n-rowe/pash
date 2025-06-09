@@ -63,7 +63,7 @@ describe.for([
 
   it('creates correct operations', () => {
     expect(operations.length).toBe(patches.length)
-    expectTypeOf(operations).toMatchTypeOf<Operation[]>()
+    expectTypeOf(operations).toExtend<Operation[]>()
   })
 
   it('can be applied correctly', () => {
