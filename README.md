@@ -1,8 +1,8 @@
 # Pash
 <p>
 <img src="https://img.shields.io/github/actions/workflow/status/n-rowe/pash/ci.yaml">
-<img src="https://img.shields.io/codecov/c/github/n-rowe/pash" />
-<img src="https://img.shields.io/github/license/n-rowe/pash?cacheSeconds=60480">
+<a href="https://codecov.io/gh/n-rowe/pash"><img src="https://codecov.io/gh/n-rowe/pash/graph/badge.svg?token=CLCNGCWGYF"/></a>
+<a href="./LICENSE"><img src="https://img.shields.io/github/license/n-rowe/pash?cacheSeconds=60480"></a>
 </p>
 
 A fast, minimal json patch generation library based off [ohash](https://github.com/unjs/ohash)'s implementation.
