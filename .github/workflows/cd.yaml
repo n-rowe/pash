@@ -59,6 +59,6 @@ jobs:
           output-file: CHANGELOG.md
 
       - name: 🚀 Publish
-        run: pnpm publish --access public
+        run: pnpm publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
