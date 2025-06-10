@@ -47,6 +47,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 📝 Bump version
+        id: changelog
         uses: TriPSs/conventional-changelog-action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
@@ -56,7 +57,17 @@ jobs:
           preset: angular
           skip-git-pull: 'true'
           tag-prefix: ''
-          output-file: CHANGELOG.md
+          output-file: 'false'
+
+      - name: ✉️ Create Release
+        uses: actions/create-release@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          release_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
 
       - name: 🚀 Publish
         run: pnpm publish --no-git-checks --access public
