@@ -1,6 +1,11 @@
 // Based on https://github.com/unjs/ohash/blob/main/src/utils/diff.ts v2.0.0 (MIT)
 export interface DiffOptions {
   /**
+   * Should array elements be deeply checked?
+   * @default false
+   */
+  deep?: boolean
+  /**
    * Function to determine if a key should be excluded from hashing.
    * @optional
    * @param key - The key to check for exclusion.
@@ -11,6 +16,7 @@ export interface DiffOptions {
 
 interface DiffResult extends Array<DiffEntry> {
   asPatches: () => Operation[]
+  asRFC6902: () => RfcOperation[]
 }
 
 enum DiffType {
@@ -39,6 +45,9 @@ export function diff(
     asPatches() {
       return diffs.map(diff => diff.toPatch())
     },
+    asRFC6902() {
+      return diffs.map(diff => diff.toRFC6902())
+    },
   })
 }
 
@@ -50,7 +59,7 @@ function _diff(
   h2Idx?: string | number,
 ): DiffEntry[] {
   const isArray = h1.type === DiffType.array && h2.type === DiffType.array
-  const isArrayElement = h1.parent?.type === DiffType.array && h2.parent?.type === DiffType.array
+  const isArrayElement = !isArray && !opts.deep && h1.parent?.type === DiffType.array && h2.parent?.type === DiffType.array
 
   const allProps = !isArrayElement
     ? new Set([
@@ -252,24 +261,34 @@ interface BaseOperation<T extends string> {
   op: T
   path: string
 }
-interface AddOperation extends BaseOperation<'add'> {
+
+// add
+interface RfcAddOperation extends BaseOperation<'add'> {
   /**
    * The value to add.
    */
   value: unknown
 }
-interface RemoveOperation extends BaseOperation<'remove'> {
+interface AddOperation extends RfcAddOperation {}
+
+// remove
+interface RfcRemoveOperation extends BaseOperation<'remove'> {}
+interface RemoveOperation extends RfcRemoveOperation {
   /**
    * The value that was removed.
    * Modification on RFC 6902 to audit old changes.
    */
   value: unknown
 }
-interface ReplaceOperation extends BaseOperation<'replace'> {
+
+// replace
+interface RfcReplaceOperation extends BaseOperation<'replace'> {
   /**
    * The value to replace with.
    */
   value: unknown
+}
+interface ReplaceOperation extends RfcReplaceOperation {
   /**
    * The old value to be replaced.
    * Modification on RFC 6902 for change auditing.
@@ -278,7 +297,9 @@ interface ReplaceOperation extends BaseOperation<'replace'> {
 }
 
 type Operation = AddOperation | RemoveOperation | ReplaceOperation
-type PatchOps = Operation['op']
+type RfcOperation = RfcAddOperation | RfcRemoveOperation | RfcReplaceOperation
+
+type PatchOps = RfcOperation['op']
 
 class DiffEntry {
   constructor(
@@ -290,7 +311,7 @@ class DiffEntry {
 
   /**
    * Converts the diff entry to a JSON Patch.
-   * RFC 6902.
+   * This contains additional properties for auditing.
    */
   toPatch(): Operation {
     const jsonPath = `${this.path}`
@@ -315,6 +336,35 @@ class DiffEntry {
           path: jsonPath,
           value: this.newValue?.value,
           from: this.oldValue?.value,
+        }
+      }
+    }
+  }
+
+  /**
+   * Converts the diff entry to a RFC 6902 JSON Patch.
+   */
+  toRFC6902(): RfcOperation {
+    const jsonPath = `${this.path}`
+    switch (this.op) {
+      case 'add': {
+        return {
+          op: 'add',
+          path: jsonPath,
+          value: this.newValue?.value,
+        }
+      }
+      case 'remove': {
+        return {
+          op: 'remove',
+          path: jsonPath,
+        }
+      }
+      case 'replace': {
+        return {
+          op: 'replace',
+          path: jsonPath,
+          value: this.newValue?.value,
         }
       }
     }
