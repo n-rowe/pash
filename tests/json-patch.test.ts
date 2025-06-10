@@ -34,7 +34,7 @@ for (let i = 0; i < tests.length; i++) {
   let doSkip = SKIP_TESTS.has(i)
 
   // Only do patch tests
-  if (test == null || test.expected == null) {
+  if (test == null || test.expected == null || test.disabled) {
     doSkip = true
   }
   // Ignore unsupported operations
